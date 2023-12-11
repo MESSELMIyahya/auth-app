@@ -1,7 +1,6 @@
 import userModel from '../models/user.model.js';
-import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
-
+import { Generate_Access_Token } from '../utils/jwt.js';
 
 export async function RegisterAuth(req,res){
     const {username,name,password,email} = req.body ;
@@ -11,9 +10,7 @@ export async function RegisterAuth(req,res){
         const oldUser = await userModel.findOne({email}) 
 
         if(oldUser) return res.status(409).json("email was token");
-        // upload user 
-        const newpass = await bcrypt.hash(password,10);
-        const userUploaded = new userModel({email,username,password:newpass,name});
+        const userUploaded = new userModel({email,username,password,name});
         await userUploaded.save();
         // const token = jwt.sign({email,username,id:userUploaded._id},process.env.SECRET_KEY);
 
@@ -37,7 +34,7 @@ export async function Login (req,res){
 
         if(!passCor) return res.status(400).json("Password not correct")
         
-        const token = jwt.sign({email,username:user.username,id:user._id},process.env.SECRET_KEY,{expiresIn:'5s'});
+        const token = Generate_Access_Token({email,username:user.username,id:user._id});
        return res.cookie('au_id',token,{httpOnly:true}).json({auth:true,token,id:user._id})
 
     }catch(err){
